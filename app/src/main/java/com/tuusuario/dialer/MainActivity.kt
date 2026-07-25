@@ -1,8 +1,10 @@
 package com.tuusuario.dialer
 
 import android.app.role.RoleManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
@@ -10,6 +12,7 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
@@ -18,10 +21,25 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnContestar: Button
     private lateinit var btnAltavoz: Button
     private lateinit var btnColgar: Button
+    private lateinit var tvNumeroLlamada: TextView
     private lateinit var audioManager: AudioManager
     private lateinit var powerManager: PowerManager
     private var proximityWakeLock: PowerManager.WakeLock? = null
     private var esAltavozActivo = false
+
+    private val receptorLlamada = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                "ACCION_NUEVA_LLAMADA" -> {
+                    val numero = intent.getStringExtra("NUMERO_LLAMADA")
+                    tvNumeroLlamada.text = numero ?: "Llamada Entrante..."
+                }
+                "ACCION_LLAMADA_FINALIZADA" -> {
+                    tvNumeroLlamada.text = "Llamada Finalizada"
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         btnContestar = findViewById(R.id.btnContestar)
         btnAltavoz = findViewById(R.id.btnAltavoz)
         btnColgar = findViewById(R.id.btnColgar)
+        tvNumeroLlamada = findViewById(R.id.tvNumeroLlamada)
 
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -39,9 +58,19 @@ class MainActivity : AppCompatActivity() {
             "MiTeléfono:SensorProximidad"
         )
 
-        // Verificar permisos de sobreposición y rol de teléfono predeterminado
         verificarPermisoSobreposicion()
         solicitarSerAppPredeterminada()
+
+        // Registrar receptor de llamada
+        val filter = IntentFilter().apply {
+            addAction("ACCION_NUEVA_LLAMADA")
+            addAction("ACCION_LLAMADA_FINALIZADA")
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(receptorLlamada, filter, RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(receptorLlamada, filter)
+        }
 
         btnContestar.setOnClickListener {
             val call = CallService.currentCall
@@ -76,6 +105,7 @@ class MainActivity : AppCompatActivity() {
             esAltavozActivo = false
             audioManager.isSpeakerphoneOn = false
             btnAltavoz.text = "ALTAVOZ (OFF)"
+            tvNumeroLlamada.text = "Llamada Finalizada"
             Toast.makeText(this, "Llamada finalizada", Toast.LENGTH_SHORT).show()
         }
     }
@@ -118,6 +148,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterReceiver(receptorLlamada)
         desactivarSensorProximidad()
     }
 }
