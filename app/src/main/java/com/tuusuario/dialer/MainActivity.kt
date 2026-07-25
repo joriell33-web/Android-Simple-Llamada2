@@ -9,6 +9,8 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import android.widget.Button
@@ -35,7 +37,7 @@ class MainActivity : AppCompatActivity() {
                     tvNumeroLlamada.text = numero ?: "Llamada Entrante..."
                 }
                 "ACCION_LLAMADA_FINALIZADA" -> {
-                    tvNumeroLlamada.text = "Llamada Finalizada"
+                    finalizarYCerrar()
                 }
             }
         }
@@ -61,7 +63,13 @@ class MainActivity : AppCompatActivity() {
         verificarPermisoSobreposicion()
         solicitarSerAppPredeterminada()
 
-        // Registrar receptor de llamada
+        // Obtener número si vino desde el lanzamiento del CallService
+        val numeroInicial = intent.getStringExtra("NUMERO_LLAMADA")
+        if (!numeroInicial.isNullOrEmpty()) {
+            tvNumeroLlamada.text = numeroInicial
+        }
+
+        // Registrar receptor
         val filter = IntentFilter().apply {
             addAction("ACCION_NUEVA_LLAMADA")
             addAction("ACCION_LLAMADA_FINALIZADA")
@@ -101,13 +109,21 @@ class MainActivity : AppCompatActivity() {
             if (call != null) {
                 call.disconnect()
             }
-            desactivarSensorProximidad()
-            esAltavozActivo = false
-            audioManager.isSpeakerphoneOn = false
-            btnAltavoz.text = "ALTAVOZ (OFF)"
-            tvNumeroLlamada.text = "Llamada Finalizada"
-            Toast.makeText(this, "Llamada finalizada", Toast.LENGTH_SHORT).show()
+            finalizarYCerrar()
         }
+    }
+
+    private fun finalizarYCerrar() {
+        desactivarSensorProximidad()
+        esAltavozActivo = false
+        audioManager.isSpeakerphoneOn = false
+        btnAltavoz.text = "ALTAVOZ (OFF)"
+        tvNumeroLlamada.text = "Llamada Finalizada"
+
+        // Cierra la pantalla de la app tras 1 segundo
+        Handler(Looper.getMainLooper()).postDelayed({
+            finishAndRemoveTask()
+        }, 1000)
     }
 
     private fun solicitarSerAppPredeterminada() {
@@ -148,7 +164,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(receptorLlamada)
+        try {
+            unregisterReceiver(receptorLlamada)
+        } catch (e: Exception) {
+            // Ya desregistrado
+        }
         desactivarSensorProximidad()
     }
 }
