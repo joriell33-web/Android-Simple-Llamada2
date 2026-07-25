@@ -5,36 +5,57 @@
     android:orientation="vertical"
     android:background="#121212">
 
-    <!-- CONTESTAR: 50% Superior -->
+    <!-- Botón 1: CONTESTAR (50% superior) -->
     <Button
         android:id="@+id/btnContestar"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2"
+        android:layout_weight="4"
         android:text="CONTESTAR"
         android:textSize="32sp"
         android:textStyle="bold"
         android:backgroundTint="#4CAF50"
         android:textColor="#FFFFFF" />
 
-    <!-- FINALIZAR: 25% Medio -->
+    <!-- Texto: INFORMACIÓN DE LA LLAMADA (Nombre o Número) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="#1E1E1E">
+
+        <TextView
+            android:id="@+id/tvNumeroLlamada"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Llamada Entrante..."
+            android:textColor="#FFFFFF"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <!-- Botón 2: FINALIZAR (20% medio) -->
     <Button
         android:id="@+id/btnColgar"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="2"
         android:text="FINALIZAR"
         android:textSize="26sp"
         android:textStyle="bold"
         android:backgroundTint="#F44336"
         android:textColor="#FFFFFF" />
 
-    <!-- ALTAVOZ: 25% Inferior -->
+    <!-- Botón 3: ALTAVOZ (20% inferior) -->
     <Button
         android:id="@+id/btnAltavoz"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="2"
         android:text="ALTAVOZ (OFF)"
         android:textSize="26sp"
         android:textStyle="bold"
